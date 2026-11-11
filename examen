@@ -1,0 +1,399 @@
+using System;
+
+using System.Globalization;
+
+using System.Text;
+
+
+
+namespace ConcesionariaAutomotriz
+
+{
+
+  class Program
+
+  {
+
+    static CultureInfo ci = CultureInfo.InvariantCulture;
+
+
+
+    // ---------------------------------------------------------
+
+    // Req 1: Validaciones de entrada
+
+    // ---------------------------------------------------------
+
+    static bool ValidarDatos(double precio, int cantidad)
+
+    {
+
+      if (precio > 0 && cantidad > 0)
+
+      {
+
+        return true;
+
+      }
+
+
+
+      Console.WriteLine(" [ERROR] Datos inválidos -> Precio: $" + precio.ToString("N2", ci)
+
+               + " | Cantidad: " + cantidad
+
+               + ". El precio y la cantidad deben ser mayores a 0.");
+
+      return false;
+
+    }
+
+
+
+    // ---------------------------------------------------------
+
+    // Req 2: Impresión de la matriz bidimensional
+
+    // ---------------------------------------------------------
+
+    static void ImprimirMatrizDatos(double[,] matriz, string[] codigos)
+
+    {
+
+      Console.WriteLine("--- MATRIZ BIDIMENSIONAL DE DATOS (PRECIO Y CANTIDAD) ---");
+
+      Console.WriteLine("{0,-7} | {1,-8} | {2,-18} | {3}", "Fila", "Código", "Col 0 (Precio $)", "Col 1 (Cantidad)");
+
+      Console.WriteLine(new string('-', 60));
+
+
+
+      for (int i = 0; i < matriz.GetLength(0); i++)
+
+      {
+
+        string fila = "[" + i + "]";
+
+        string precio = "$" + matriz[i, 0].ToString("N2", ci).PadLeft(17);
+
+        string cantidad = matriz[i, 1].ToString("N0", ci).PadLeft(16);
+
+
+
+        Console.WriteLine("{0,-7} | {1,-8} | {2} | {3}", fila, codigos[i], precio, cantidad);
+
+      }
+
+    }
+
+
+
+    // ---------------------------------------------------------
+
+    // Req 3: Ordenamiento Burbuja (mayor a menor Monto Neto)
+
+    // Sincroniza datos[,], codigos[], modelos[] y montosNetos[]
+
+    // ---------------------------------------------------------
+
+    static void OrdenarBurbuja(double[,] datos, string[] codigos, string[] modelos, double[] montosNetos)
+
+    {
+
+      int n = montosNetos.Length;
+
+      int columnas = datos.GetLength(1);
+
+
+
+      for (int i = 0; i < n - 1; i++)
+
+      {
+
+        for (int j = 0; j < n - 1 - i; j++)
+
+        {
+
+          if (montosNetos[j] < montosNetos[j + 1])
+
+          {
+
+            // Intercambiar montos netos
+
+            double tmpMonto = montosNetos[j];
+
+            montosNetos[j] = montosNetos[j + 1];
+
+            montosNetos[j + 1] = tmpMonto;
+
+
+
+            // Intercambiar códigos
+
+            string tmpCodigo = codigos[j];
+
+            codigos[j] = codigos[j + 1];
+
+            codigos[j + 1] = tmpCodigo;
+
+
+
+            // Intercambiar modelos
+
+            string tmpModelo = modelos[j];
+
+            modelos[j] = modelos[j + 1];
+
+            modelos[j + 1] = tmpModelo;
+
+
+
+            // Intercambiar filas completas de la matriz
+
+            for (int c = 0; c < columnas; c++)
+
+            {
+
+              double tmpDato = datos[j, c];
+
+              datos[j, c] = datos[j + 1, c];
+
+              datos[j + 1, c] = tmpDato;
+
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+
+    // ---------------------------------------------------------
+
+    // Req 4: Búsqueda lineal por código
+
+    // ---------------------------------------------------------
+
+    static void BuscarCodigo(string[] codigos, string[] modelos, double[] montos, string codigoBuscado)
+
+    {
+
+      if (string.IsNullOrWhiteSpace(codigoBuscado))
+
+      {
+
+        Console.WriteLine(" * ERROR: la entrada está vacía. Ingrese un código válido.");
+
+        return;
+
+      }
+
+
+
+      codigoBuscado = codigoBuscado.Trim();
+
+
+
+      for (int i = 0; i < codigos.Length; i++)
+
+      {
+
+        if (string.Equals(codigos[i], codigoBuscado, StringComparison.OrdinalIgnoreCase))
+
+        {
+
+          Console.WriteLine(" * Buscando '" + codigoBuscado + "': ¡ENCONTRADO! Modelo: "
+
+                   + modelos[i] + " | Monto: $" + montos[i].ToString("N2", ci));
+
+          return;
+
+        }
+
+      }
+
+
+
+      Console.WriteLine(" * Buscando '" + codigoBuscado + "': ERROR, el código no está registrado.");
+
+    }
+
+
+
+    // ---------------------------------------------------------
+
+    // Programa principal
+
+    // ---------------------------------------------------------
+
+    static void Main(string[] args)
+
+    {
+
+      Console.OutputEncoding = Encoding.UTF8;
+
+
+
+      // Estructuras de datos fijas (6 registros)
+
+      string[] codigos = { "AUTO-201", "AUTO-202", "AUTO-203", "AUTO-204", "AUTO-205", "AUTO-206" };
+
+      string[] modelos = { "SUV Interceptor", "Sedan Executive", "PickUp Titan", "City Hatchback", "Electric EV", "Van Carga" };
+
+
+
+      // Matriz 6 filas x 2 columnas: Col 0 = Precio Unitario, Col 1 = Cantidad Vendida
+
+      double[,] datos = new double[6, 2]
+
+      {
+
+        { 28000.0, 2 },
+
+        { 18500.0, 4 },
+
+        { 35000.0, 1 },
+
+        { 14000.0, 5 },
+
+        { 42000.0, 1 },
+
+        { 22500.0, 3 }
+
+      };
+
+
+
+      double[] montosNetos = new double[6];
+
+
+
+      // Acumulador y contador
+
+      double granTotal = 0.0;
+
+      int contadorPremium = 0;
+
+
+
+      // ---------- Encabezado ----------
+
+      Console.WriteLine(new string('=', 60));
+
+      Console.WriteLine("  CONTROL DE VENTAS AUTOMOTRICES (EVALUACIÓN 45 MIN)");
+
+      Console.WriteLine(new string('=', 60));
+
+      Console.WriteLine();
+
+
+
+      // ---------- Cálculo de montos (Req 1 y Req 2) ----------
+
+      for (int i = 0; i < datos.GetLength(0); i++)
+
+      {
+
+        double precio = datos[i, 0];
+
+        int cantidad = (int)datos[i, 1];
+
+
+
+        if (ValidarDatos(precio, cantidad))
+
+        {
+
+          montosNetos[i] = precio * cantidad; // Monto Neto
+
+          granTotal += montosNetos[i];     // Acumulador
+
+
+
+          if (montosNetos[i] > 50000.00)
+
+          {
+
+            contadorPremium++;        // Contador Premium
+
+          }
+
+        }
+
+        else
+
+        {
+
+          montosNetos[i] = 0.0;
+
+        }
+
+      }
+
+
+
+      // ---------- Matriz (antes de ordenar) ----------
+
+      ImprimirMatrizDatos(datos, codigos);
+
+      Console.WriteLine();
+
+
+
+      // ---------- Ordenamiento (Req 3) ----------
+
+      OrdenarBurbuja(datos, codigos, modelos, montosNetos);
+
+
+
+      Console.WriteLine("--- REPORTE ORDENADO POR MONTO NETO (DECRECIENTE) ---");
+
+      for (int i = 0; i < codigos.Length; i++)
+
+      {
+
+        Console.WriteLine("{0}. Código: {1} | Modelo: {2,-15} | Monto: $ {3}",
+
+          i + 1, codigos[i], modelos[i], montosNetos[i].ToString("N2", ci));
+
+      }
+
+
+
+      // ---------- Métricas resumen ----------
+
+      Console.WriteLine();
+
+      Console.WriteLine(new string('-', 60));
+
+      Console.WriteLine("MÉTRICAS RESUMEN:");
+
+      Console.WriteLine(" * " + "Gran Total Acumulado".PadRight(26) + ": $ " + granTotal.ToString("N2", ci));
+
+      Console.WriteLine(" * " + "Ventas Premium (> $50,000)".PadRight(26) + ": " + contadorPremium + " transacciones");
+
+
+
+      // ---------- Búsqueda (Req 4) ----------
+
+      Console.WriteLine();
+
+      Console.WriteLine(new string('-', 60));
+
+      Console.WriteLine("PRUEBA DE BÚSQUEDA SECUENCIAL:");
+
+      BuscarCodigo(codigos, modelos, montosNetos, "AUTO-203");
+
+
+
+      Console.ReadKey();
+
+    }
+
+  }
+
+}
